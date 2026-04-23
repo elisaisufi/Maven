@@ -1,6 +1,7 @@
 package org.example;
 
 import java.sql.*;
+import org.apache.commons.lang3.StringUtils;
 
 public class App {
 
@@ -13,45 +14,69 @@ public class App {
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
 
-            // 1. Printoni te gjithe tabelat ne db tuaj
-            // COURSE TABLE
+            // COURSE
             System.out.println("\nCOURSE");
             ResultSet courseRs = stmt.executeQuery("SELECT * FROM course");
 
             while (courseRs.next()) {
-                System.out.println(
-                        courseRs.getInt("id") + " | " +
-                                courseRs.getString("course_name") + " | " +
-                                courseRs.getInt("duration") + " | " +
-                                courseRs.getString("programming_language")
+
+                String name = StringUtils.defaultIfBlank(
+                        courseRs.getString("course_name"), "N/A"
                 );
+
+                String language = StringUtils.upperCase(
+                        StringUtils.defaultIfBlank(
+                                courseRs.getString("programming_language"), "unknown"
+                        )
+                );
+
+                String row = StringUtils.joinWith(" | ",
+                        courseRs.getInt("id"),
+                        name,
+                        courseRs.getInt("duration"),
+                        language
+                );
+
+                System.out.println(row);
             }
 
-            // STUDENT TABLE
+            // STUDENT
             System.out.println("\nSTUDENT");
             ResultSet studentRs = stmt.executeQuery("SELECT * FROM student");
 
             while (studentRs.next()) {
-                System.out.println(
-                        studentRs.getInt("student_id") + " | " +
-                                studentRs.getString("student_name") + " | " +
-                                studentRs.getInt("points") + " | " +
-                                studentRs.getInt("course_id")
+
+                String name = StringUtils.capitalize(
+                        StringUtils.lowerCase(
+                                StringUtils.defaultString(studentRs.getString("student_name"))
+                        )
                 );
+
+                String row = StringUtils.joinWith(" | ",
+                        studentRs.getInt("student_id"),
+                        name,
+                        studentRs.getInt("points"),
+                        studentRs.getInt("course_id")
+                );
+
+                System.out.println(row);
             }
 
-            // ENROLLMENT TABLE
+            // ENROLLMENT
             System.out.println("\nENROLLMENT");
             ResultSet enrollRs = stmt.executeQuery("SELECT * FROM enrollment");
 
             while (enrollRs.next()) {
-                System.out.println(
-                        enrollRs.getInt("student_id") + " -> " +
-                                enrollRs.getInt("course_id")
+
+                String row = StringUtils.joinWith(" -> ",
+                        enrollRs.getInt("student_id"),
+                        enrollRs.getInt("course_id")
                 );
+
+                System.out.println(row);
             }
 
-            // 2. Studentet qe kane me shume se 10 pike
+            // 1. Beni query studentet qe kane me shume se 10 pike
             System.out.println("\nSTUDENTS WITH > 10 POINTS");
 
             ResultSet highPoints = stmt.executeQuery(
@@ -59,33 +84,46 @@ public class App {
             );
 
             while (highPoints.next()) {
-                System.out.println(
-                        highPoints.getInt("student_id") + " | " +
-                                highPoints.getString("student_name") + " | " +
-                                highPoints.getInt("points")
+
+                String name = StringUtils.capitalize(
+                        StringUtils.lowerCase(
+                                StringUtils.defaultString(highPoints.getString("student_name"))
+                        )
                 );
+
+                String row = StringUtils.joinWith(" | ",
+                        highPoints.getInt("student_id"),
+                        name,
+                        highPoints.getInt("points")
+                );
+
+                System.out.println(row);
             }
 
-            // 3. Shtoni nje student
+            // 2. Shtoni nje student
             System.out.println("\nINSERT NEW STUDENT");
+
+            String newName = StringUtils.capitalize("dev student");
 
             stmt.executeUpdate(
                     "INSERT INTO student (student_name, email, birth_date, phone_number, points, course_id) " +
-                            "VALUES ('DEV Student', 'dev@gmail.com', '2002-05-10', '0690000000', 100, 1)"
+                            "VALUES ('" + newName + "', 'dev@gmail.com', '2002-05-10', '0690000000', 100, 1)"
             );
 
-            // e. Modifikoni piket e nje studenti
+            // 3. Modifikoni piket e nje studenti
             System.out.println("\nUPDATE STUDENT POINTS");
 
+            String updateName = StringUtils.capitalize("elisa isufi");
+
             stmt.executeUpdate(
-                    "UPDATE student SET points = 99 WHERE student_name = 'Elisa Isufi'"
+                    "UPDATE student SET points = 99 WHERE student_name = '" + updateName + "'"
             );
 
-            // f. Fshini nje student
+            // 4. Fshini nje student
             System.out.println("\nDELETE STUDENT");
 
             stmt.executeUpdate(
-                    "DELETE FROM student WHERE student_name = 'DEV Student'"
+                    "DELETE FROM student WHERE student_name = '" + newName + "'"
             );
 
         } catch (SQLException e) {
